@@ -1,0 +1,13 @@
+Source: vx-dga-l-mimetypes
+Section: utils
+Priority: extra
+Maintainer: Arturo Martín <amartinromero@gmail.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.5
+Homepage: http://wiki.vitalinux.educa.aragon.es
+
+Package: vx-dga-l-mimetypes
+Architecture: all 
+Depends: ${misc:Depends}
+Description: Gestiona asociaciones entre mimetypes y archivos desktop
+ Gestiona asociaciones entre mimetypes y archivos desktop de aplicaciones

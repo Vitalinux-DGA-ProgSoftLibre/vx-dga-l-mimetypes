@@ -1,0 +1,125 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+""" Información de ConfigParser:
+https://docs.python.org/3/library/configparser.html
+https://pymotw.com/2/ConfigParser/
+"""
+
+import ConfigParser
+import sys
+import os
+
+os.system('clear')
+
+if len(sys.argv) < 5 :
+	texto = "  Sintaxis de Uso:  "
+	print texto.center(60,"=")
+	print "\n\nNo has pasado los parámetros correctamente: \n\n"
+	print "\nvx-configparser fichero seccion opcion/opciones_separados_por_; valor/valores_separadas_por_; \n\n"
+	print 'vx-configparser "/usr/share/applications/mimeapps.list"  "Default Applications" "image/pb;video/px;" "app1.desktop;app3.desktop;app7.desktop"'
+	sys.exit(1)
+else :
+	texto = " Resultado de vx-configparser: "
+	print texto.center(60,"=")
+
+fichero = str(sys.argv[1])
+seccion = str(sys.argv[2])
+#accion = str(sys.argv[3])
+opciones = str(sys.argv[3])
+valores = str(sys.argv[4])
+
+print "fichero: \'%s\' \nseccion: \'%s\' \nopciones: \'%s\' \nvalores: \'%s\'" % (fichero,seccion,opciones,valores)
+
+# Comprobaciones:
+try:
+	if os.path.isfile(fichero) :
+		parser = ConfigParser.SafeConfigParser()
+		parser.read(fichero)
+	else :
+		print "=> El fichero \"" + fichero + "\" no existe ..."
+		sys.exit(1)
+except ConfigParser.ParsingError, err:
+	print 'Problema, el archivo ', fichero, 'no se puede parsear!!:', err
+
+seccion = seccion.strip(" ")
+if parser.has_section(seccion) :
+    print '\nOk!! La sección \"' + str(seccion) + '\" ya existe en \"' + str(fichero) + '\"'
+else :
+	print '\nOk!! La sección \"' + str(seccion) + '\" no exite en \"' + str(fichero) +'\", se creará a continuación ...'
+	if os.path.basename(fichero) == "mimeapps.list" :
+		if seccion == "Default Applications" or seccion == "Added Associations" :
+			parser.add_section(seccion)
+		else :
+			print "\n=> Error: El fichero mimeapps.list solo puede contener dos posibles secciones:"
+			print "1) Default Applications"
+			print "2) Added Associations\n"
+			sys.exit(1)
+	else :
+		parser.add_section(seccion)
+
+## Quitamos los espacios en blanco que pudiera haber antes y después de los valores introducidos, y
+# comprobamos si se han dejado como último caracter de los opciones y valores es un ";"
+# Para comprobar el primer y último carácter: str1.startswith('"') str1.endswith('"'):
+
+opciones = opciones.strip(" ")
+if opciones.endswith(';') :
+	opciones = opciones[:-1]
+
+valores = valores.strip(" ")
+if valores.endswith(';') :
+	valores = valores[:-1]
+
+lista_opciones = opciones.split(";")
+lista_valores = valores.split(";")
+
+# En el caso de mimeapps.list  las secciones pueden ser: [Default Applications] y [Added Associations]
+if os.path.basename(fichero) == "mimeapps.list" :
+	if seccion == "Default Applications" :
+		for opcion in lista_opciones :
+			parser.set(seccion,opcion,lista_valores[0])
+		if len(lista_valores) > 2 :
+			print "=> En la sección  \"" + str(seccion) + "\" no se pueden indicar varios valores a una misma opción ..."
+			print "=> Sólo se tendrá en cuenta el primer valor indicado ..."
+
+	if seccion == "Added Associations" :
+		# Comprobaremos si la opción ya existe para recuperar su valor actual y añadir los nuevos
+		for opcion in lista_opciones :
+			if parser.has_option(seccion,opcion) :
+				#parser.set(seccion,opcion,parser.get(seccion,opcion) + valores + ";")
+				valores_actuales = parser.get(seccion,opcion)
+				lista_valores_actuales = valores_actuales.split(";")
+				valores_futuros = valores_actuales
+				for valor in lista_valores :
+					if not valor in lista_valores_actuales :
+						valores_futuros = valores_futuros + valor + ";"
+				parser.set(seccion,opcion,valores_futuros)
+			else :
+				parser.set(seccion,opcion,valores + ";")
+
+else :
+	parser.set(seccion,opciones,valores)
+
+with open(fichero, 'w') as configfile:
+	parser.write(configfile)
+
+print "\n=> El fichero \"" + fichero + "\" resultante es el siguiente:\n"
+parser.write(sys.stdout)
+sys.exit(0)
+
+""" Comentarios/Opciones:
+parser.write(sys.stdout)
+
+for section in parser.sections():
+    print section
+    for name, value in parser.items(section):
+        print '  %s = %r' % (name, value)
+
+masterAbrevs = ['ASW', 'AS', 'UW']
+for i, e in enumerate(masterAbrevs):
+    if (e[-1] == 'W') and (e != 'UW'):
+        masterAbrevs[i] = masterAbrevs[i][:-1]
+
+os.path.dirname(ruta) : para obtener el path absoluto del directorio padre del archivo
+os.path.basename(ruta) : para obtener el nombre relativo del archivo
+"""

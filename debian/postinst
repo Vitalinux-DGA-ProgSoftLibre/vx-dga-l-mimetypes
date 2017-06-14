@@ -1,0 +1,110 @@
+#!/bin/bash
+# postinst script for vx-dga-l-mimetypes
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+
+case "$1" in
+    configure)
+
+	if test -f /usr/bin/vx-configparser ; then
+		chmod +x usr/bin/vx-configparser
+	fi
+
+	# Si quisieramos afectar directamente al usuario haríamos uso de la siguiente sección
+	for HOMEUSU in $(/usr/bin/vx-home-usuarios-graficos) ; do
+		USUARIO="$(getent passwd | grep ":${HOMEUSU}:" | cut -d":" -f1)"
+		ARCHIVO="${HOMEUSU}/.local/share/applications/mimeapps.list"
+		if test -f "${ARCHIVO}" ; then
+			# Por ejemplo:
+			# sed -i "s/gnash.desktop/vx-firefox-swf.desktop/g" "${ARCHIVO}"
+			# vx-configparser "${ARCHIVO}"  "Default Applications" "image/pb;video/px;" "app1.desktop"
+			echo "=> Se ha adecuado el mimeapps.list del usuario ${USUARIO} ..."
+		fi
+		
+		# Archivo que hace que se puedan ver vídeos en formato .swf
+		##if ! test -f ${HOMEUSU}/.mime.types ; then
+		##	cp /etc/skel/.mime.types /home/$USU/.mime.types
+		##	chown -R $USU /home/$USU/.mime.types
+		##fi
+	done
+
+	# En resumen:
+	# [Default Applications] : asociación entre mimetype y aplicación (Desktop) que la abrirá por defecto (si se pincha doble click)
+	# [Added Associations] : asociación entre mimetypes y aplicaciones (desktop) que aparecerá como opciones al pinchar con el botón derecho y elegir "abrir con"
+	#
+	# El aspecto de las secciones tiene el siguiente aspecto:
+	## [Added Associations]
+	## application/x-shockwave-flash=vx-firefox-swf.desktop;
+	## application/vnd.adobe.flash.movie=vx-firefox-swf.desktop;
+	#
+	
+	ARCHIVO="/usr/share/applications/mimeapps.list"
+	if [ ! -f "${ARCHIVO}" ] ; then
+		echo "=> No existe el archivo \"${ARCHIVO}\" por lo que se va a crear su estructura básica ..."
+		cat > ${ARCHIVO}<<EOF
+[Default Applications]
+
+[Added Associations]
+
+EOF
+	fi
+
+	## [Added Associations]
+	SECCION="Added Associations"
+    # Asociacion para la aplicación mtpaint, la cual esta Mal construida al no tener el campo MimeType=image/bmp;image/g3fax;image/gif;image/x-fits;image/x-pcx;image/x-portable-anymap;image/x-portable-bitmap;image/x-portable-graymap;image/x-portable-pixmap;image/x-psd;image/x-sgi;image/x-tga;image/x-xbitmap;image/x-xwindowdump;image/x-xcf;image/x-compressed-xcf;image/x-gimp-gbr;image/x-gimp-pat;image/x-gimp-gih;image/tiff;image/jpeg;image/x-psp;application/postscript;image/png;image/x-icon;image/x-xpixmap;image/svg+xml;application/pdf;image/x-wmf;image/jp2;image/jpeg2000;image/jpx;image/x-xcursor;
+    echo "=> Van a añadirse las asocicaciones necesarias para las aplicaciones \"mtpaint\" y \"shotwell-viewer\" en caso de ser necesarias ..."
+    FORMATOS="image/bmp;image/gif;image/jpeg;image/jpg;image/pjpeg;image/png;image/tiff;image/x-3fr;image/x-adobe-dng;image/x-arw;image/x-bay;image/x-bmp;image/x-canon-cr2;image/x-canon-crw;image/x-cap;image/x-cr2;image/x-crw;image/x-dcr;image/x-dcraw;image/x-dcs;image/x-dng;image/x-drf;image/x-eip;image/x-erf;image/x-fff;image/x-fuji-raf;image/x-iiq;image/x-k25;image/x-kdc;image/x-mef;image/x-minolta-mrw;image/x-mos;image/x-mrw;image/x-nef;image/x-nikon-nef;image/x-nrw;image/x-olympus-orf;image/x-orf;image/x-panasonic-raw;image/x-pef;image/x-pentax-pef;image/x-png;image/x-ptx;image/x-pxn;image/x-r3d;image/x-raf;image/x-raw;image/x-rw2;image/x-rwl;image/x-rwz;image/x-sigma-x3f;image/x-sony-arw;image/x-sony-sr2;image/x-sony-srf;image/x-sr2;image/x-srf;image/x-x3f;"
+    APLICACIONES="mtpaint.desktop;shotwell-viewer.desktop;"
+    vx-configparser "${ARCHIVO}" "${SECCION}" "${FORMATOS}" "${APLICACIONES}"
+    
+    ## [Default Applications]
+    SECCION="Default Applications"
+	# Forzamos a que la aplicación que habra por defecto las imágnes estándar sea el visor de Shotwell
+	FORMATOS="image/bmp;image/gif;image/jpeg;image/jpg;image/pjpeg;image/png;image/tiff;image/x-3fr;image/x-adobe-dng;image/x-arw;image/x-bay;image/x-bmp;image/x-canon-cr2;image/x-canon-crw;image/x-cap;image/x-cr2;image/x-crw;image/x-dcr;image/x-dcraw;image/x-dcs;image/x-dng;image/x-drf;image/x-eip;image/x-erf;image/x-fff;image/x-fuji-raf;image/x-iiq;image/x-k25;image/x-kdc;image/x-mef;image/x-minolta-mrw;image/x-mos;image/x-mrw;image/x-nef;image/x-nikon-nef;image/x-nrw;image/x-olympus-orf;image/x-orf;image/x-panasonic-raw;image/x-pef;image/x-pentax-pef;image/x-png;image/x-ptx;image/x-pxn;image/x-r3d;image/x-raf;image/x-raw;image/x-rw2;image/x-rwl;image/x-rwz;image/x-sigma-x3f;image/x-sony-arw;image/x-sony-sr2;image/x-sony-srf;image/x-sr2;image/x-srf;image/x-x3f;"
+	APLICACIONES="shotwell-viewer.desktop"
+	vx-configparser "${ARCHIVO}" "${SECCION}" "${FORMATOS}" "${APLICACIONES}"
+
+	# Actualizamos los mime-types
+	update-mime-database /usr/share/mime
+	# Actualizamos los desktop
+	update-desktop-database /usr/share/applications
+
+	# Para comprobar:
+	## cd /tmp && tocuh test.swf
+	# Lo siguiente nos permite comprobar que reconoce la extensión como el mime-type definido
+	## gvfs-info test.swf | grep "standard::content-type"
+	# Lo siguiente nos permite saber que *.desktop lanzará el archivo con esa extensión y mime-type
+	## gvfs-mime --query application/x-newtype
+
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+# dh_installdeb will replace this with shell code automatically
+# generated by other debhelper scripts.
+
+#DEBHELPER#
+
+exit 0

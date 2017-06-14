@@ -1,0 +1,7 @@
+[Default Applications]
+application/vnd.adobe.flash.movie=vx-firefox-swf.desktop
+application/x-shockwave-flash=vx-firefox-swf.desktop
+
+[Added Associations]
+application/vnd.adobe.flash.movie=firefox.desktop;
+application/x-shockwave-flash=vx-firefox-swf.desktop;
