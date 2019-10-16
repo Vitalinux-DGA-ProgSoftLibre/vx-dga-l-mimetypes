@@ -32,6 +32,11 @@ case "$1" in
 		sed -i "/${APLICACION}/d" "${ARCHIVO}"
 	fi
 
+	APLICACION="wine.desktop"
+	if test -f "${ARCHIVO}" ; then
+		sed -i "/${APLICACION}/d" "${ARCHIVO}"
+	fi
+
     ;;
     upgrade|deconfigure)
 	;;
